@@ -17,10 +17,10 @@ Since the slides are 1920/1080, it does not benefit anyone to keep the larger fi
 
 `shrink-pptx input_file.pptx where_to_save_result.pptx`
 
-Takes in `input_file.pptx`, opens it up (using a system temp directory), examines each image file.
-- If any are over 1920x1080, it downscales them to that resolution.
-- If any file is now over 2 MiB, it is now adjusted to have lower quality of image (same resolution)
-- If that file is still over 2 MiB, it is downscaled in increasing steps until that cap is reached.
+Takes in `input_file.pptx`, opens it up (using a system temp directory), and examines each image file.
+- If any are over 1920px wide, it downscales them to that resolution (keeping aspect ratio).
+- If any file is now over 2 MiB, it is adjusted to have lower quality of image (same resolution)
+- If that file is still over 2 MiB, it is discarded and the program iteratively downscales until the image is under 2 MiB.
 - If any file is now larger then the original, the original is used.
 
 The resulting image files are placed back the expected locations and the resulting slide deck is saved to `where_to_save_result.pptx`
