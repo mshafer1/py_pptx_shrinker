@@ -1,0 +1,8 @@
+.venv/
+*.pyc
+__pycache__/
+dist/
+
+*.pptx
+*.zip
+!tests/*.pptx
