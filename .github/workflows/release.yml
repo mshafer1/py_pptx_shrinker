@@ -97,6 +97,7 @@ jobs:
         uses: ni/python-actions/update-project-version@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
         with:
           # The default GITHUB_TOKEN cannot trigger PR workflows.
-          token: ${{ secrets.ADMIN_PAT }}
+          # TOdO: Provide a PAT to run PR checks
+          # token: ${{ secrets.ADMIN_PAT }}
           version-rule: "prepatch"
           use-dev-suffix: false
