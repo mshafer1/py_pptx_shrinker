@@ -43,36 +43,14 @@ def _subprocess_run(command: list[str]) -> None:
 
 def _shrink_image(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
     """Shrink an image using ffmpeg."""
-    _subprocess_run(
-        [
-            "ffmpeg",
-            "-i",
-            str(input_path),
-            "-vf",
-            "scale='if(gt(iw,1920),1920,-1):-1'",
-            "-y",
-            str(output_path),
-        ]
-    )
+    _ffmpeg_scale(input_path, output_path, 'if(gt(iw,1920),1920,-1)', -1)
 
     # check if result is over 2MB, if so, try to reduce quality
     if output_path.stat().st_size > _MAX_IMAGE_SIZE:
         _logger.warning(
             "Image %s is larger than 2MB after scaling, trying to reduce quality.", input_path.name
         )
-        _subprocess_run(
-            [
-                "ffmpeg",
-                "-i",
-                str(input_path),
-                "-vf",
-                "scale='if(gt(iw,1920),1920,-1):-1'",
-                "-q:v",
-                "5",
-                "-y",
-                str(output_path),
-            ]
-        )
+        _ffmpeg_scale(input_path, output_path, 'if(gt(iw,1920),1920,-1)', -1)
 
     if output_path.stat().st_size > _MAX_IMAGE_SIZE:
         _logger.warning(
@@ -83,17 +61,7 @@ def _shrink_image(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
         while output_path.stat().st_size > _MAX_IMAGE_SIZE:
             scale_factor = next(sizes)
             _logger.info("Trying scale factor %.3f for image %s...", scale_factor, input_path.name)
-            _subprocess_run(
-                [
-                    "ffmpeg",
-                    "-i",
-                    str(input_path),
-                    "-vf",
-                    f"scale='-1:iw*{scale_factor:.3f}'",
-                    "-y",
-                    str(output_path),
-                ]
-            )
+            _ffmpeg_scale(input_path, output_path, -1, f"iw*{scale_factor:.3f}")
 
     # if it's not actually smaller, keep the original
     if output_path.stat().st_size >= input_path.stat().st_size:
@@ -101,6 +69,19 @@ def _shrink_image(input_path: pathlib.Path, output_path: pathlib.Path) -> None:
             "Shrunk image %s is not smaller than original, keeping original.", input_path.name
         )
         shutil.copy(input_path, output_path)
+
+def _ffmpeg_scale(input_path, output_path, width, height):
+    _subprocess_run(
+        [
+            "ffmpeg",
+            "-i",
+            str(input_path),
+            "-vf",
+            f"scale={width}:{height}",
+            "-y",
+            str(output_path),
+        ]
+    )
 
 
 def shrink(input_file: str, output_file: str) -> None:
