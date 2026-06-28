@@ -74,8 +74,12 @@ def _ffmpeg_scale(input_path, output_path, width, height):
     _subprocess_run(
         [
             "ffmpeg",
+            # Keep orientation metadata from the source instead of auto-rotating pixels.
+            "-noautorotate",
             "-i",
             str(input_path),
+            "-map_metadata",
+            "0",
             "-vf",
             f"scale={width}:{height}",
             "-y",
