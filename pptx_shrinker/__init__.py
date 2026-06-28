@@ -95,6 +95,7 @@ def _validate_zip_member_paths(zip_ref: zipfile.ZipFile, extract_root: pathlib.P
     """
     extract_root_resolved = extract_root.resolve(strict=False)
 
+    result = []
     for member in zip_ref.infolist():
         # Zip paths are POSIX; normalize backslashes to catch crafted entries.
         member_path = pathlib.PurePosixPath(member.filename.replace("\\", "/"))
@@ -105,6 +106,8 @@ def _validate_zip_member_paths(zip_ref: zipfile.ZipFile, extract_root: pathlib.P
         target_path = (extract_root / pathlib.Path(*member_path.parts)).resolve(strict=False)
         if not target_path.is_relative_to(extract_root_resolved):
             raise ValueError(f"Archive member escapes extraction directory: {member.filename}")
+        result.append(os.path.normpath(target_path.relative_to(extract_root_resolved)))
+    return result
 
 
 def shrink(input_file: str, output_file: str) -> None:
@@ -113,8 +116,9 @@ def shrink(input_file: str, output_file: str) -> None:
         temp_path = pathlib.Path(temp_dir)
         _logger.info("Extracting PowerPoint file to %s...", temp_dir)
         with zipfile.ZipFile(input_file, "r") as zip_ref:
-            _validate_zip_member_paths(zip_ref, temp_path)
-            zip_ref.extractall(temp_dir)
+            for file in _validate_zip_member_paths(zip_ref, temp_path):
+                zip_ref.extract(file, temp_path)
+
             files = zip_ref.namelist()
             media_files = [f for f in files if f.startswith("ppt/media/")]
             with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
