@@ -98,15 +98,11 @@ def _validate_zip_member_paths(zip_ref: zipfile.ZipFile, extract_root: pathlib.P
     result = []
     for member in zip_ref.infolist():
         # Zip paths are POSIX; normalize backslashes to catch crafted entries.
-        member_path = pathlib.PurePosixPath(member.filename.replace("\\", "/"))
+        member_path = pathlib.PurePosixPath(os.path.realpath(member.filename))
 
-        if member_path.is_absolute() or ".." in member_path.parts:
-            raise ValueError(f"Unsafe archive path: {member.filename}")
-
-        target_path = (extract_root / pathlib.Path(*member_path.parts)).resolve(strict=False)
-        if not target_path.is_relative_to(extract_root_resolved):
+        if not member_path.is_relative_to(extract_root_resolved):
             raise ValueError(f"Archive member escapes extraction directory: {member.filename}")
-        result.append(os.path.normpath(target_path.relative_to(extract_root_resolved)))
+        result.append(member_path.relative_to(extract_root_resolved))
     return result
 
 
